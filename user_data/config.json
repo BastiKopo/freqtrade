@@ -1,0 +1,102 @@
+{
+  "$schema": "https://schema.freqtrade.io/schema.json",
+  "bot_name": "hl-ema-ma-safe",
+  "initial_state": "running",
+
+  "dry_run": true,
+  "dry_run_wallet": 1000,
+
+  "timeframe": "15m",
+  "strategy": "EmaMaCrossoverStrategy",
+
+  "stake_currency": "USDC",
+  "stake_amount": "unlimited",
+  "max_open_trades": 3,
+  "tradable_balance_ratio": 0.2,
+
+  "trading_mode": "futures",
+  "futures_mode": "both",
+  "position_mode": "hedge",
+  "margin_mode": "isolated",
+
+  "leverage": 3,
+  "use_exit_signal": true,
+  "exit_profit_only": false,
+
+  "unfilledtimeout": { "entry": 3, "exit": 3, "exit_timeout_count": 0, "unit": "minutes" },
+
+  "entry_pricing": {
+    "price_side": "bid",
+    "use_order_book": true,
+    "order_book_top": 1,
+    "price_last_balance": 0.5,
+    "check_depth_of_market": { "enabled": false, "bids_to_ask_delta": 1 }
+  },
+  "exit_pricing": { "price_side": "ask", "use_order_book": true, "order_book_top": 1 },
+
+  "pairlists": [
+    {
+      "method": "StaticPairList",
+      "config": {
+        "pair_whitelist": [
+          "BTC/USDC:USDC",
+          "ETH/USDC:USDC",
+          "SOL/USDC:USDC",
+          "HYPE/USDC:USDC",
+          "BNB/USDC:USDC",
+          "XRP/USDC:USDC",
+          "DOGE/USDC:USDC",
+          "AVAX/USDC:USDC",
+          "LINK/USDC:USDC",
+          "LTC/USDC:USDC",
+          "TON/USDC:USDC",
+          "NEAR/USDC:USDC",
+          "APT/USDC:USDC",
+          "SUI/USDC:USDC",
+          "ARB/USDC:USDC",
+          "IMX/USDC:USDC",
+          "LDO/USDC:USDC",
+          "AAVE/USDC:USDC",
+          "TRX/USDC:USDC",
+          "ADA/USDC:USDC",
+          "TAO/USDC:USDC",
+          "EIGEN/USDC:USDC",
+          "CRV/USDC:USDC",
+          "JUP/USDC:USDC",
+          "WIF/USDC:USDC",
+          "PUMP/USDC:USDC",
+          "KBONK/USDC:USDC",
+          "PENGU/USDC:USDC",
+          "ENA/USDC:USDC",
+          "ZRO/USDC:USDC"
+        ]
+      }
+    }
+  ],
+
+  "exchange": {
+    "name": "hyperliquid",
+    "walletAddress": "YOUR_WALLET_ADDRESS",
+    "privateKey": "ENV_HL_PRIVATE_KEY",
+    "ccxt_config": { "options": { "defaultType": "swap" } },
+    "ccxt_async_config": {}
+  },
+
+  "telegram": { "enabled": false, "token": "ENV_TG_TOKEN", "chat_id": "YOUR_CHAT_ID" },
+  "api_server": {
+    "enabled": false,
+    "listen_ip_address": "0.0.0.0",
+    "listen_port": 8080,
+    "verbosity": "error",
+    "enable_openapi": false,
+    "jwt_secret_key": "ENV_API_JWT",
+    "ws_token": "ENV_API_WS_TOKEN",
+    "CORS_origins": [],
+    "username": "ENV_API_USER",
+    "password": "ENV_API_PASS"
+  },
+
+  "cancel_open_orders_on_exit": true,
+  "force_entry_enable": false,
+  "internals": { "process_throttle_secs": 5 }
+}
