@@ -45,10 +45,21 @@ class EmaMaCrossoverStrategy(IStrategy):
     order_types = {
         "entry": "limit",
         "exit": "limit",
+        "entry_long": "limit",
+        "entry_short": "limit",
+        "exit_long": "limit",
+        "exit_short": "limit",
         "force_entry": "market",
         "force_exit": "market",
+        "force_entry_long": "market",
+        "force_entry_short": "market",
+        "force_exit_long": "market",
+        "force_exit_short": "market",
         "stoploss": "market",
         "emergency_exit": "market",
+        "stoploss_on_exchange": False,
+        "stoploss_on_exchange_interval": 60,
+        "stoploss_on_exchange_limit_ratio": 0.99,
     }
 
     # Zeit-in-Kraft – Freqtrade erwartet ein vollständiges Mapping je Order-Typ.
@@ -56,8 +67,16 @@ class EmaMaCrossoverStrategy(IStrategy):
     order_time_in_force = {
         "entry": "gtc",
         "exit": "gtc",
+        "entry_long": "gtc",
+        "entry_short": "gtc",
+        "exit_long": "gtc",
+        "exit_short": "gtc",
         "force_entry": "ioc",
         "force_exit": "ioc",
+        "force_entry_long": "ioc",
+        "force_entry_short": "ioc",
+        "force_exit_long": "ioc",
+        "force_exit_short": "ioc",
         "stoploss": "gtc",
         "emergency_exit": "ioc",
     }
