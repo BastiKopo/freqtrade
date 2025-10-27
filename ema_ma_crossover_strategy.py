@@ -49,11 +49,6 @@ class EmaMaCrossoverStrategy(IStrategy):
         "force_exit": "market",
         "stoploss": "market",
         "emergency_exit": "market",
-
-        # Stoploss-on-exchange (werden von manchen Builds im Mapping erwartet)
-        "stoploss_on_exchange": False,
-        "stoploss_on_exchange_interval": 60,     # Sek., wenn oben True
-        "stoploss_on_exchange_limit_ratio": 0.99
     }
 
     # Zeit-in-Kraft – Freqtrade erwartet ein vollständiges Mapping je Order-Typ.
@@ -69,6 +64,8 @@ class EmaMaCrossoverStrategy(IStrategy):
 
     # Einige Releases erwarten dieses Flag als Klassenattribut:
     stoploss_on_exchange: bool = False
+    stoploss_on_exchange_interval: int = 60
+    stoploss_on_exchange_limit_ratio: float = 0.99
 
     # === Protections (in neuen FT-Versionen in die Strategie) ===
     protections = [
