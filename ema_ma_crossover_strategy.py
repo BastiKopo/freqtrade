@@ -62,24 +62,9 @@ class EmaMaCrossoverStrategy(IStrategy):
         "stoploss_on_exchange_limit_ratio": 0.99,
     }
 
-    # Zeit-in-Kraft – Freqtrade erwartet ein vollständiges Mapping je Order-Typ.
-    # Hyperliquid nutzt implizit GTC, wir geben dies explizit für alle Keys an.
-    order_time_in_force = {
-        "entry": "gtc",
-        "exit": "gtc",
-        "entry_long": "gtc",
-        "entry_short": "gtc",
-        "exit_long": "gtc",
-        "exit_short": "gtc",
-        "force_entry": "ioc",
-        "force_exit": "ioc",
-        "force_entry_long": "ioc",
-        "force_entry_short": "ioc",
-        "force_exit_long": "ioc",
-        "force_exit_short": "ioc",
-        "stoploss": "gtc",
-        "emergency_exit": "ioc",
-    }
+    # Zeit-in-Kraft – Hyperliquid unterstützt aktuell keine expliziten Vorgaben.
+    # Daher überlassen wir die Konfiguration dem Freqtrade-Default (GTC).
+    order_time_in_force = {}
 
     # Einige Releases erwarten dieses Flag als Klassenattribut:
     stoploss_on_exchange: bool = False
