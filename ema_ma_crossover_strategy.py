@@ -63,13 +63,24 @@ class EmaMaCrossoverStrategy(IStrategy):
     }
 
     # Zeit-in-Kraft – Hyperliquid unterstützt aktuell keine expliziten Vorgaben.
-    # Daher überlassen wir die Konfiguration dem Freqtrade-Default (GTC).
+    # Wir setzen diesen Wert deshalb im Initializer auf ein leeres Dict,
+    # damit Freqtrade keine Time-in-Force-Policies an die Börse übermittelt.
     order_time_in_force = {}
 
     # Einige Releases erwarten dieses Flag als Klassenattribut:
     stoploss_on_exchange: bool = False
     stoploss_on_exchange_interval: int = 60
     stoploss_on_exchange_limit_ratio: float = 0.99
+
+    def __init__(self, config: dict) -> None:
+        super().__init__(config)
+
+        # Hyperliquid erlaubt aktuell keine Time-in-Force-Policies. Einige
+        # Freqtrade-Versionen initialisieren jedoch Standardwerte, sobald dieser
+        # Parameter "truthy" ist. Wir leeren ihn deshalb explizit erneut und
+        # entfernen eventuelle Konfigurationen aus der übergebenen Config.
+        config.pop("order_time_in_force", None)
+        self.order_time_in_force = {}
 
     # === Protections (in neuen FT-Versionen in die Strategie) ===
     protections = [
