@@ -101,31 +101,42 @@ class EmaMaCrossoverStrategy(IStrategy):
 
     # === Protections (in neuen FT-Versionen in die Strategie) ===
     protections = [
-        {"method": "CooldownPeriod", "stop_duration_candles": 4},
+        {"method": "CooldownPeriod", "stop_duration_candles": 6},
         {
             "method": "StoplossGuard",
             "lookback_period_candles": 200,
-            "trade_limit": 2,
-            "stop_duration_candles": 60,
+            "trade_limit": 1,
+            "stop_duration_candles": 120,
             "only_per_pair": False
         },
         {
             "method": "MaxDrawdown",
-            "lookback_period_candles": 1440,
-            "trade_limit": 20,
-            "max_allowed_drawdown": 0.10,
-            "stop_duration_candles": 240
+            "lookback_period_candles": 720,
+            "trade_limit": 10,
+            "max_allowed_drawdown": 0.05,
+            "stop_duration_candles": 720
         },
     ]
 
     # === Parameter (wie TV-Inputs) ===
     length_ma: int = 10
     length_ema: int = 10
+    length_ma_htf: int = 21
+    length_ema_htf: int = 34
     atr_len: int = 14
 
     # Filter-Schwellen
     min_atr_pct: float = 0.003    # >= 0.30% ATR
     min_sep_pct: float = 0.0005   # >= 0.05% Abstand (relativ zu Close)
+    neutral_min_atr_pct: float = 0.006  # >= 0.60% ATR für neutrale Regime
+    neutral_breakout_window: int = 20
+
+    # Stop/Fallback-Parameter
+    fallback_stoploss: float = -0.005
+    max_stoploss_pct: float = 0.08
+    leverage_atr_floor: float = 0.001
+    leverage_target_multiple: float = 4.0
+    leverage_hard_cap: float = 10.0
 
     # === Plot ===
     plot_config = {
@@ -168,8 +179,8 @@ class EmaMaCrossoverStrategy(IStrategy):
         i = self.dp.get_pair_dataframe(
             pair=metadata["pair"], timeframe=self.informative_timeframe
         ).copy()
-        i["xMA"]  = i["close"].rolling(self.length_ma).mean()
-        i["xEMA"] = i["xMA"].ewm(span=self.length_ema, adjust=False).mean()
+        i["xMA"] = i["close"].rolling(self.length_ma_htf).mean()
+        i["xEMA"] = i["xMA"].ewm(span=self.length_ema_htf, adjust=False).mean()
         i["regime"] = np.where(i["xEMA"] < i["xMA"], 1, np.where(i["xEMA"] > i["xMA"], -1, 0))
 
         df = merge_informative_pair(
@@ -198,8 +209,28 @@ class EmaMaCrossoverStrategy(IStrategy):
         # H1-Regime
         regime_h1 = df.get("regime_1h", 0).fillna(0)
 
-        long_entry  = long_sig  & vol_ok & sep_ok & (regime_h1 == 1)
-        short_entry = short_sig & vol_ok & sep_ok & (regime_h1 == -1)
+        recent_high = df["high"].rolling(self.neutral_breakout_window, min_periods=1).max().shift(1)
+        recent_low = df["low"].rolling(self.neutral_breakout_window, min_periods=1).min().shift(1)
+        neutral_vol_ok = df["atrp"] > self.neutral_min_atr_pct
+
+        long_entry = (
+            long_sig
+            & vol_ok
+            & sep_ok
+            & (
+                (regime_h1 == 1)
+                | ((regime_h1 == 0) & neutral_vol_ok & (df["close"] > recent_high))
+            )
+        )
+        short_entry = (
+            short_sig
+            & vol_ok
+            & sep_ok
+            & (
+                (regime_h1 == -1)
+                | ((regime_h1 == 0) & neutral_vol_ok & (df["close"] < recent_low))
+            )
+        )
 
         df.loc[long_entry,  "enter_long"]  = 1
         df.loc[short_entry, "enter_short"] = 1
@@ -228,11 +259,13 @@ class EmaMaCrossoverStrategy(IStrategy):
     ) -> float:
         df: DataFrame = kwargs.get("dataframe")
         if df is None or current_time not in df.index or "atrp" not in df.columns:
-            return -0.02  # Fallback
+            return self.fallback_stoploss
 
         atrp = float(df.loc[current_time, "atrp"])
         if not np.isfinite(atrp) or atrp <= 0:
-            return -0.02
+            return self.fallback_stoploss
+
+        atrp = max(atrp, self.leverage_atr_floor)
 
         # Initial: 2x ATR
         sl = -2.0 * atrp
@@ -244,7 +277,7 @@ class EmaMaCrossoverStrategy(IStrategy):
             sl = max(sl, 0.0)  # Break-even
 
         # Sicherheitsgrenze
-        return float(max(sl, -0.10))
+        return float(max(sl, -self.max_stoploss_pct))
 
     # ---------- Leverage (ATR-limitiert) ----------
     def leverage(
@@ -258,13 +291,12 @@ class EmaMaCrossoverStrategy(IStrategy):
         **kwargs,
     ) -> float:
         df: DataFrame = kwargs.get("dataframe")
-        atrp = 0.005
+        atrp = max(self.leverage_atr_floor, 0.005)
         if df is not None and current_time in df.index and "atrp" in df.columns:
             v = float(df.loc[current_time, "atrp"])
             if np.isfinite(v) and v > 0:
-                atrp = v
+                atrp = max(v, self.leverage_atr_floor)
 
         # Ziel: min. ~4x ATR Abstand -> ruhiger Markt -> höherer Hebel; volatiler Markt -> niedriger
-        vol_cap = max(1.0, min(max_leverage, 4.0 / (atrp * 100.0)))  # z.B. atrp=0.5% -> 8x
-        hard_cap = 10.0
-        return float(max(1.0, min(vol_cap, hard_cap)))
+        vol_cap = max(1.0, min(max_leverage, self.leverage_target_multiple / (atrp * 100.0)))
+        return float(max(1.0, min(vol_cap, self.leverage_hard_cap)))
