@@ -56,15 +56,9 @@ class EmaMaCrossoverStrategy(IStrategy):
         "stoploss_on_exchange_limit_ratio": 0.99
     }
 
-    # Zeit-in-Kraft – umfassend gesetzt
-    order_time_in_force = {
-        "entry": "gtc",
-        "exit": "gtc",
-        "force_entry": "ioc",
-        "force_exit": "ioc",
-        "stoploss": "gtc",
-        "emergency_exit": "ioc",
-    }
+    # Zeit-in-Kraft – Hyperliquid unterstützt aktuell keine TIF-Policies.
+    # Ein leeres Mapping signalisiert Freqtrade, die Börsen-Defaults zu nutzen.
+    order_time_in_force = {}
 
     # Einige Releases erwarten dieses Flag als Klassenattribut:
     stoploss_on_exchange: bool = False
