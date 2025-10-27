@@ -56,9 +56,16 @@ class EmaMaCrossoverStrategy(IStrategy):
         "stoploss_on_exchange_limit_ratio": 0.99
     }
 
-    # Zeit-in-Kraft – Hyperliquid unterstützt aktuell keine TIF-Policies.
-    # Ein leeres Mapping signalisiert Freqtrade, die Börsen-Defaults zu nutzen.
-    order_time_in_force = {}
+    # Zeit-in-Kraft – Freqtrade erwartet ein vollständiges Mapping je Order-Typ.
+    # Hyperliquid nutzt implizit GTC, wir geben dies explizit für alle Keys an.
+    order_time_in_force = {
+        "entry": "gtc",
+        "exit": "gtc",
+        "force_entry": "ioc",
+        "force_exit": "ioc",
+        "stoploss": "gtc",
+        "emergency_exit": "ioc",
+    }
 
     # Einige Releases erwarten dieses Flag als Klassenattribut:
     stoploss_on_exchange: bool = False
