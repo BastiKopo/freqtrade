@@ -39,8 +39,8 @@
   },
   "exchange": {
     "name": "hyperliquid",
-    "walletAddress": "0x4DF90B124c7F67e3Dab6FEeAD73F7f859853b608",
-    "privateKeyt": "0xfda8f1f377b46480806c0c81ae44bd339ee4b1a8b3098fc4a1203e30cced38d8",
+    "walletAddress": "xxx",
+    "privateKeyt": "xxx",
     "ccxt_config": { "options": { "defaultType": "swap" } },
     "ccxt_async_config": {},
     "pair_whitelist": [
@@ -88,8 +88,8 @@
   ],
   "telegram": {
     "enabled": true,
-    "token": "7537676480:AAFHu_cZzQ3c59u58SYMfd3N_j4xtCr3SNY",
-    "chat_id": "2120682703"
+    "token": "xxx:xxx",
+    "chat_id": "xxx"
   },
   "api_server": {
     "enabled": true,
@@ -97,11 +97,11 @@
     "listen_port": 8080,
     "verbosity": "error",
     "enable_openapi": false,
-    "jwt_secret_key": "c14b13f2bfe8f1bf5d1f80270f2e5d6328f29207172a37c96f1e5cae8938d086",
-    "ws_token": "qJdbrmrKVC8RiTu3k-4oP94XSk7WbfNAdg",
+    "jwt_secret_key": "xxxx",
+    "ws_token": "xxxx-xxx",
     "CORS_origins": [],
     "username": "freqtrader",
-    "password": "Basti1976#"
+    "password": "xxx#"
   },
   "bot_name": "freqtrade",
   "initial_state": "running",
