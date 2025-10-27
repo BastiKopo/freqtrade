@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.freqtrade.io/schema.json",
-  "max_open_trades": 30,
-  "leverage": 35,
+  "max_open_trades": 6,
+  "leverage": 10,
   "stake_currency": "USDC",
   "stake_amount": "unlimited",
   "tradable_balance_ratio": 0.99,
@@ -26,7 +26,7 @@
     "price_side": "same",
     "use_order_book": true,
     "order_book_top": 1,
-    "price_last_balance": 0.0,
+    "price_last_balance": 0.15,
     "check_depth_of_market": {
       "enabled": false,
       "bids_to_ask_delta": 1
