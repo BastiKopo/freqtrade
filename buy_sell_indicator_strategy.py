@@ -13,8 +13,12 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from freqtrade.strategy import IStrategy, IntParameter, DecimalParameter, BooleanParameter
-from technical.indicators import qtpylib
+from freqtrade.strategy import (
+    IStrategy,
+    IntParameter,
+    DecimalParameter,
+    BooleanParameter,
+)
 import talib.abstract as ta
 
 
@@ -46,8 +50,25 @@ class BuySellIndicatorStrategy(IStrategy):
 
     @staticmethod
     def _heikin_ashi_close(df: DataFrame) -> pd.Series:
-        ha = qtpylib.heikinashi(df)
-        return ha["close"]
+        open_prices = df["open"].to_numpy(copy=False)
+        high_prices = df["high"].to_numpy(copy=False)
+        low_prices = df["low"].to_numpy(copy=False)
+        close_prices = df["close"].to_numpy(copy=False)
+
+        ha_close = (open_prices + high_prices + low_prices + close_prices) / 4.0
+        return pd.Series(ha_close, index=df.index)
+
+    @staticmethod
+    def _crossed_above(series_a: pd.Series, series_b: pd.Series) -> pd.Series:
+        cond_now = series_a > series_b
+        cond_prev = series_a.shift(1) <= series_b.shift(1)
+        return (cond_now & cond_prev).fillna(False)
+
+    @staticmethod
+    def _crossed_below(series_a: pd.Series, series_b: pd.Series) -> pd.Series:
+        cond_now = series_a < series_b
+        cond_prev = series_a.shift(1) >= series_b.shift(1)
+        return (cond_now & cond_prev).fillna(False)
 
     @staticmethod
     def _compute_trailing_stop(src: pd.Series, nloss: pd.Series) -> pd.Series:
@@ -91,14 +112,14 @@ class BuySellIndicatorStrategy(IStrategy):
         # EMA with period 1 effectively mirrors the source but keeps the original logic intact.
         df["ema1"] = ta.EMA(df["src"], timeperiod=1)
 
-        df["above"] = qtpylib.crossed_above(df["ema1"], df["trailing_stop"]).astype(int)
-        df["below"] = qtpylib.crossed_above(df["trailing_stop"], df["ema1"]).astype(int)
+        df["above"] = self._crossed_above(df["ema1"], df["trailing_stop"])
+        df["below"] = self._crossed_below(df["ema1"], df["trailing_stop"])
 
-        df["barbuy"] = (df["src"] > df["trailing_stop"]).astype(int)
-        df["barsell"] = (df["src"] < df["trailing_stop"]).astype(int)
+        df["barbuy"] = df["src"] > df["trailing_stop"]
+        df["barsell"] = df["src"] < df["trailing_stop"]
 
-        df["buy_signal"] = (df["barbuy"].astype(bool) & df["above"].astype(bool))
-        df["sell_signal"] = (df["barsell"].astype(bool) & df["below"].astype(bool))
+        df["buy_signal"] = df["barbuy"] & df["above"]
+        df["sell_signal"] = df["barsell"] & df["below"]
 
         return df
 
