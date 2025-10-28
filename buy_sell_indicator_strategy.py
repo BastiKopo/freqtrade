@@ -71,6 +71,14 @@ class BuySellIndicatorStrategy(IStrategy):
         return (cond_now & cond_prev).fillna(False)
 
     @staticmethod
+    def _ema(series: pd.Series, period: int) -> pd.Series:
+        """Return an exponential moving average while accepting period 1 gracefully."""
+        if period <= 1:
+            return series.astype(float)
+
+        return series.astype(float).ewm(span=period, adjust=False).mean()
+
+    @staticmethod
     def _compute_trailing_stop(src: pd.Series, nloss: pd.Series) -> pd.Series:
         stop_values = np.full(len(src), np.nan, dtype=float)
 
@@ -110,7 +118,7 @@ class BuySellIndicatorStrategy(IStrategy):
         df["trailing_stop"] = self._compute_trailing_stop(df["src"], df["nloss"])
 
         # EMA with period 1 effectively mirrors the source but keeps the original logic intact.
-        df["ema1"] = ta.EMA(df["src"], timeperiod=1)
+        df["ema1"] = self._ema(df["src"], period=1)
 
         df["above"] = self._crossed_above(df["ema1"], df["trailing_stop"])
         df["below"] = self._crossed_below(df["ema1"], df["trailing_stop"])
