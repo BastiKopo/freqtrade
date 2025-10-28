@@ -19,7 +19,6 @@ from freqtrade.strategy import (
     DecimalParameter,
     BooleanParameter,
 )
-import talib.abstract as ta
 
 
 class BuySellIndicatorStrategy(IStrategy):
@@ -45,8 +44,29 @@ class BuySellIndicatorStrategy(IStrategy):
 
     @staticmethod
     def _atr(df: DataFrame, period: int) -> pd.Series:
-        atr = ta.ATR(df, timeperiod=period)
-        return atr
+        """Compute an ATR equivalent without relying on TA-Lib."""
+
+        if period <= 1:
+            # ATR with a period of 1 devolves to the true range itself.
+            period = 1
+
+        high = df["high"].astype(float)
+        low = df["low"].astype(float)
+        close = df["close"].astype(float)
+
+        prev_close = close.shift(1)
+
+        tr1 = high - low
+        tr2 = (high - prev_close).abs()
+        tr3 = (low - prev_close).abs()
+
+        true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1, skipna=True)
+
+        # Wilder's smoothing for ATR via an exponential moving average.
+        alpha = 1.0 / period
+        atr = true_range.ewm(alpha=alpha, adjust=False).mean()
+
+        return atr.fillna(method="bfill").fillna(0.0)
 
     @staticmethod
     def _heikin_ashi_close(df: DataFrame) -> pd.Series:
