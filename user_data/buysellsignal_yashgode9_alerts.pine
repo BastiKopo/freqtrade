@@ -66,12 +66,15 @@ newDirection = bool(ta.change(direction))
 bool buySignal = false
 bool sellSignal = false
 
+confirmOnClose = input.bool(true, 'Confirm signals on bar close', group='Alerts')
+bool confirmationGate = confirmOnClose ? barstate.isconfirmed : true
+
 if repaint
-    buySignal := newDirection and direction < 0
-    sellSignal := newDirection and direction > 0
+    buySignal := newDirection and direction < 0 and confirmationGate
+    sellSignal := newDirection and direction > 0 and confirmationGate
 else
-    buySignal := newDirection and direction[1] < 0
-    sellSignal := newDirection and direction[1] > 0
+    buySignal := newDirection and direction[1] < 0 and confirmationGate
+    sellSignal := newDirection and direction[1] > 0 and confirmationGate
 
 // Alert conditions so that webhooks can pick the events up.
 alertcondition(buySignal, title='Buy-point signal', message='BUY')
