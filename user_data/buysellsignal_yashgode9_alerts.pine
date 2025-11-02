@@ -63,21 +63,26 @@ else
 
 // Signal booleans stay true for the bar where the point is painted.
 newDirection = bool(ta.change(direction))
-buySignal = newDirection and direction <= 0
-sellSignal = newDirection and direction > 0
+bool buySignal = false
+bool sellSignal = false
 
-plotshape(buySignal, title='Buy Signal', text='Buy', style=shape.labelup, location=location.belowbar, color=color.new(buycolor, 0), textcolor=color.new(buycolor1, labels))
-plotshape(sellSignal, title='Sell Signal', text='Sell', style=shape.labeldown, location=location.abovebar, color=color.new(sellcolor, 0), textcolor=color.new(sellcolor1, labels))
+if repaint
+    buySignal := newDirection and direction < 0
+    sellSignal := newDirection and direction > 0
+else
+    buySignal := newDirection and direction[1] < 0
+    sellSignal := newDirection and direction[1] > 0
 
 // Alert conditions so that webhooks can pick the events up.
-alertcondition(buySignal, title='Buy signal', message='BUY')
-alertcondition(sellSignal, title='Sell signal', message='SELL')
+alertcondition(buySignal, title='Buy-point signal', message='BUY')
+alertcondition(sellSignal, title='Sell-point signal', message='SELL')
 
-// Optional runtime alert for manual testing.
-if newDirection
-    if sellSignal
-        alert('Sell signal generated!!!', alert.freq_once_per_bar_close)
-    if buySignal
-        alert('Buy signal generated!!!', alert.freq_once_per_bar_close)
+// Optional runtime alert for manual testing using the same conditions that
+// drive the chart labels. No additional shapes are plotted so the visual
+// behaviour of the original script remains unchanged.
+if buySignal
+    alert('Buy signal generated!!!', alert.freq_once_per_bar_close)
+if sellSignal
+    alert('Sell signal generated!!!', alert.freq_once_per_bar_close)
 
 //==========================================================================  The End Of Drama =========================================================================//
